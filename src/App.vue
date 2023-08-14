@@ -2,11 +2,43 @@
 
 import { onMounted, ref } from "vue";
 import { newEditor, setContent, getContent, compareContent, commentLink, addComment } from "./helpers/editorHelpers";
+import mammoth from "mammoth";
 
 var editor;
 const editorContent = ref(null);
 var defaultContent, defaultContentText;
 var commentsData = ref([])
+
+const updateQuillContent = () => {
+  if (selectedRange) {
+    editor.deleteText(selectedRange.index, selectedRange.length);
+    editor.insertText(selectedRange.index, selectedText);
+  }
+}
+const addInput = () => {
+  let range = editor.getSelection();
+  if (range.length != 0) {
+    let text = editor.getText(range.index, range.length);
+    selectedText = text
+    selectedRange = range
+    let input = "<input value='" + selectedText + "' name='editorInputs' rangeLength='" + range.length + "' rangeIndex='" + range.index + "'>"
+    document.getElementById("inputsArea").innerHTML += input
+
+
+    var editorInputs = document.querySelectorAll("[name='editorInputs']")
+    editorInputs.forEach((input) => {
+      input.addEventListener('input', handleInputChange);
+    });
+
+  }
+}
+const handleInputChange = (event) => {
+  var content = event.target.value
+  var rangeLength = event.target.attributes.rangeLength.value
+  var rangeIndex = event.target.attributes.rangeIndex.value
+  editor.deleteText(rangeIndex, rangeLength);
+  editor.insertText(rangeIndex, content);
+}
 
 const setDefaultContent = () => {
   var delta;
@@ -31,6 +63,23 @@ const compareCurrentAndDefaultContent = () => {
 const newComment = () => {
   commentsData = addComment(editor, commentsData)
 }
+const wordToHTML = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      mammoth.convertToHtml({ arrayBuffer: event.target.result })
+        .then((result) => {
+          editor.clipboard.dangerouslyPasteHTML(result.value);
+        })
+        .catch((err) => {
+          console.error('Error converting Word to HTML:', err);
+        });
+    };
+    reader.readAsArrayBuffer(file);
+  }
+}
+
 onMounted(() => {
   editor = newEditor(editorContent)
   setDefaultContent()
@@ -96,22 +145,26 @@ onMounted(() => {
           <a class="custom-act" @click="newComment">
             <i class="fa-solid fa-comment"></i>
           </a>
-
+          <a class="custom-act" @click="addInput">
+            <i class="fa-solid fa-keyboard"></i>
+          </a>
         </div>
         <div class="editorContentContainer">
           <div class="editorContentHeaders"></div>
           <div ref="editorContent" class="editorContent"></div>
           <div class="editorContentComments">
+            <h3>Word Import</h3>
+            <input type="file" @change="wordToHTML" />
             <h3>Comments</h3>
             <div class="commentsArea">
               <a v-if="commentsData.length == 0" href="#">There is no comment...</a>
-              <a v-if="commentsData" v-for="(item, index) in commentsData" :key="index" @click.prevent="commentLink(index, editor, commentsData)" href="#">{{ item.comment }}</a>
+              <a v-if="commentsData" v-for="(item, index) in commentsData" :key="index"
+                @click.prevent="commentLink(index, editor, commentsData)" href="#">{{ item.comment }}</a>
             </div>
+            <h3>Inputs</h3>
+            <div id="inputsArea"></div>
           </div>
         </div>
-      </div>
-      <div id="linksContainer">
-
       </div>
     </section>
   </div>
