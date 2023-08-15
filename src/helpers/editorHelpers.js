@@ -147,7 +147,6 @@ function checkHeaders() {
             headerLinks += "<a href='#" + id + "' class='medium'>" + header.innerHTML + "</a>";
         }
     });
-    console.log(headerLinks);
     document.querySelector(".editorContentHeaders").innerHTML = headerLinks;
 }
 

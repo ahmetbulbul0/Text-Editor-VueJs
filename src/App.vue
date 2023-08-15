@@ -3,42 +3,13 @@
 import { onMounted, ref } from "vue";
 import { newEditor, setContent, getContent, compareContent, commentLink, addComment } from "./helpers/editorHelpers";
 import mammoth from "mammoth";
+import { saveAs } from "file-saver";
+import * as quillToWord from "quill-to-word"
 
 var editor;
 const editorContent = ref(null);
 var defaultContent, defaultContentText;
 var commentsData = ref([])
-
-const updateQuillContent = () => {
-  if (selectedRange) {
-    editor.deleteText(selectedRange.index, selectedRange.length);
-    editor.insertText(selectedRange.index, selectedText);
-  }
-}
-const addInput = () => {
-  let range = editor.getSelection();
-  if (range.length != 0) {
-    let text = editor.getText(range.index, range.length);
-    selectedText = text
-    selectedRange = range
-    let input = "<input value='" + selectedText + "' name='editorInputs' rangeLength='" + range.length + "' rangeIndex='" + range.index + "'>"
-    document.getElementById("inputsArea").innerHTML += input
-
-
-    var editorInputs = document.querySelectorAll("[name='editorInputs']")
-    editorInputs.forEach((input) => {
-      input.addEventListener('input', handleInputChange);
-    });
-
-  }
-}
-const handleInputChange = (event) => {
-  var content = event.target.value
-  var rangeLength = event.target.attributes.rangeLength.value
-  var rangeIndex = event.target.attributes.rangeIndex.value
-  editor.deleteText(rangeIndex, rangeLength);
-  editor.insertText(rangeIndex, content);
-}
 
 const setDefaultContent = () => {
   var delta;
@@ -79,10 +50,84 @@ const wordToHTML = (event) => {
     reader.readAsArrayBuffer(file);
   }
 }
+const exportWord = async () => { // need-fix
+  const delta = editor.getContents();
+  const quillToWordConfig = {
+    exportAs: 'blob'
+  };
+  const docAsBlob = await quillToWord.generateWord(delta, quillToWordConfig);
+  saveAs(docAsBlob, 'word-export.docx');
+}
+
+const addInput = () => {
+  let range = editor.getSelection();
+  if (range && range.length != 0) {
+    let text = editor.getText(range.index, range.length);
+    let input = "<input value='" + text + "' name='editorInputs' rangeLength='" + range.length + "' rangeIndex='" + range.index + "'>"
+    let inputElement = document.createElement('div');
+    inputElement.innerHTML = input;
+    let actualInputElement = inputElement.firstChild;
+    document.getElementById("inputsArea").appendChild(actualInputElement);
+    actualInputElement.addEventListener('input', handleInputChange);
+  }
+}
+const handleInputChange = (event) => {
+  var content = event.target.value;
+  var rangeLength = parseInt(event.target.attributes.rangeLength.value);
+  var rangeIndex = parseInt(event.target.attributes.rangeIndex.value);
+  editor.deleteText(rangeIndex, rangeLength);
+  editor.insertText(rangeIndex, content);
+
+  if (content.length !== rangeLength) {
+    event.target.setAttribute('rangeLength', content.length.toString());
+  }
+}
+const removeAt = (originalString, index, length) => {
+  return originalString.substring(0, index) + originalString.substring(index + length);
+}
+const updateInputIndices = (indexChange, lengthChange, changeType) => {
+  var editorInputs = document.querySelectorAll("[name='editorInputs']");
+  editorInputs.forEach((input) => {
+    let inputIndex = parseInt(input.getAttribute('rangeIndex'));
+    let inputLength = parseInt(input.getAttribute('rangeLength'));
+
+    if (inputIndex <= indexChange && (inputIndex + inputLength) >= indexChange) {
+      let value = input.value
+      let newText = removeAt(value, (indexChange - inputIndex), lengthChange);
+      input.setAttribute('rangeLength', newText.length.toString());
+      input.value = newText
+    }
+
+    if (inputIndex >= indexChange) {
+      switch (changeType) {
+        case "insert":
+          input.setAttribute('rangeIndex', inputIndex + lengthChange);
+          break;  // "insert" durumu için bir break ekledim
+        case "delete":
+          input.setAttribute('rangeIndex', inputIndex - lengthChange);
+          break;
+      }
+    }
+  });
+};
 
 onMounted(() => {
   editor = newEditor(editorContent)
   setDefaultContent()
+  editor.on('text-change', (delta, oldContents, source) => {
+    if (source === 'user') {
+      let indexChange = delta.ops[0]?.retain || 0;
+      let changeType, lengthChange = null;
+      if (delta.ops[1].insert) {
+        changeType = "insert"
+        lengthChange = delta.ops[1].insert.length;
+      } else if (delta.ops[1].delete) {
+        changeType = "delete"
+        lengthChange = delta.ops[1].delete;
+      }
+      updateInputIndices(indexChange, lengthChange, changeType);
+    }
+  });
 })
 
 </script>
