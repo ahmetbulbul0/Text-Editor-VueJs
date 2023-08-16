@@ -2,6 +2,8 @@ import mammoth from "mammoth";
 import { getEditor, getContent, setContent } from "./editorHelpers";
 import { inputChangeHandler } from "./handlerHelpers";
 
+var defaultContent, defaultContentText;
+
 function setDefaultContent() {
     var delta;
     if (!localStorage.getItem("defaultContent")) {
@@ -11,6 +13,8 @@ function setDefaultContent() {
     }
     delta = JSON.parse(localStorage.getItem("defaultContent"));
     setContent(delta);
+    defaultContent = getContent();
+    defaultContentText = getEditor().getText();
 }
 
 function updateDefaultContent() {
@@ -34,7 +38,7 @@ function newComment(comments) {
                 });
             }
         } else {
-            alert("User cursor is not in editor");
+            console.log("User cursor is not in editor");
         }
     }
     return comments;
@@ -70,18 +74,13 @@ function importWord(event) {
         reader.readAsArrayBuffer(file);
     }
 }
-// TO-DO
-function compareContent(editor, oldContent, newContent, oldContentText) {
-    const differences = {
-        insert: [],
-        delete: [],
-    };
 
-    var diff = oldContent.diff(newContent);
+function compareContent() {
+    let newContent = getContent();
+    var diff = defaultContent.diff(newContent);
     for (var i = 0; i < diff.ops.length; i++) {
         var op = diff.ops[i];
         if (op.hasOwnProperty("insert")) {
-            differences.insert.push(op.insert); // need fix
             op.attributes = {
                 ...op.attributes,
                 background: "#cce8cc",
@@ -89,9 +88,7 @@ function compareContent(editor, oldContent, newContent, oldContentText) {
             };
         }
         if (op.hasOwnProperty("delete")) {
-            let deletedText = oldContentText.substring(oldContentText.length - op.delete - 1); // need fix
-            differences.delete.push(deletedText);
-            op.retain = op.delete; // need fix
+            op.retain = op.delete;
             delete op.delete;
             op.attributes = {
                 ...op.attributes,
@@ -101,9 +98,8 @@ function compareContent(editor, oldContent, newContent, oldContentText) {
             };
         }
     }
-    var adjusted = oldContent.compose(diff);
-    editor.setContents(adjusted);
+    var adjusted = defaultContent.compose(diff);
+    getEditor().setContents(adjusted);
 }
-// TO-DO
 
 export { setDefaultContent, updateDefaultContent, newComment, addInput, importWord, compareContent };
