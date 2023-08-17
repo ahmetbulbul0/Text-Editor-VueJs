@@ -5,6 +5,8 @@ import { inputChangeHandler } from "./handlerHelpers";
 var defaultContent, defaultContentText;
 
 function setDefaultContent() {
+    getEditor().enable(true);
+    document.getElementById("inputsArea").innerHTML = ""
     var delta;
     if (!localStorage.getItem("defaultContent")) {
         let defaultHtml = `<h1>Hello Visitor</h1>`;
@@ -18,11 +20,19 @@ function setDefaultContent() {
 }
 
 function updateDefaultContent() {
+    if (getEditor().isEnabled() == false) {
+        console.log("Editor Disabled");
+        return;
+    }
     let currentContent = getContent(getEditor());
     localStorage.setItem("defaultContent", JSON.stringify(currentContent));
 }
 
 function newComment(comments) {
+    if (getEditor().isEnabled() == false) {
+        console.log("Editor Disabled");
+        return;
+    }
     var prompt = window.prompt("Please enter Comment", "");
     if (prompt == null || prompt == "") {
         console.log("User cancelled the prompt.");
@@ -45,6 +55,10 @@ function newComment(comments) {
 }
 
 function addInput() {
+    if (getEditor().isEnabled() == false) {
+        console.log("Editor Disabled");
+        return;
+    }
     let range = getEditor().getSelection();
     if (range && range.length != 0) {
         let text = getEditor().getText(range.index, range.length);
@@ -58,6 +72,10 @@ function addInput() {
 }
 
 function importWord(event) {
+    if (getEditor().isEnabled() == false) {
+        console.log("Editor Disabled");
+        return;
+    }
     const file = event.target.files[0];
     if (file) {
         const reader = new FileReader();
@@ -76,6 +94,10 @@ function importWord(event) {
 }
 
 function compareContent() {
+    if (getEditor().isEnabled() == false) {
+        console.log("Editor Disabled");
+        return;
+    }
     let newContent = getContent();
     var diff = defaultContent.diff(newContent);
     for (var i = 0; i < diff.ops.length; i++) {
@@ -102,4 +124,40 @@ function compareContent() {
     getEditor().setContents(adjusted);
 }
 
-export { setDefaultContent, updateDefaultContent, newComment, addInput, importWord, compareContent };
+function setFixedInputs() {
+    getEditor().setContents({
+        ops: [
+            { insert: "Title \n", attributes: { header: 1 } },
+            { insert: "\n" },
+            { insert: "Description \n", attributes: { italic: true } },
+            { insert: "\n" },
+            { insert: "Sub Title \n", attributes: { header: 2 } },
+            { insert: "\n" },
+            { insert: "Sub Description \n", attributes: { italic: true, size: "small" } },
+        ],
+    });
+
+    let contentText = getEditor().getText();
+    let titleIndex = contentText.indexOf("Title");
+    let descriptionIndex = contentText.indexOf("Description");
+    let subTitleIndex = contentText.indexOf("Sub Title");
+    let subDescriptionIndex = contentText.indexOf("Sub Description");
+
+    let inputs = [];
+    inputs.push("<input value='Title' name='editorInputs' rangeLength='5' rangeIndex='" + titleIndex + "'>");
+    inputs.push("<textarea value='Description' name='editorInputs' rangeLength='11' rangeIndex='" + descriptionIndex + "'>Description</textarea>");
+    inputs.push("<input value='Sub Title' name='editorInputs' rangeLength='9' rangeIndex='" + subTitleIndex + "'>");
+    inputs.push("<textarea value='Sub Description' name='editorInputs' rangeLength='15' rangeIndex='" + subDescriptionIndex + "'>Sub Description</textarea>");
+
+    inputs.forEach((input) => {
+        let inputElement = document.createElement("div");
+        inputElement.innerHTML = input;
+        let actualInputElement = inputElement.firstChild;
+        document.getElementById("inputsArea").appendChild(actualInputElement);
+        actualInputElement.addEventListener("input", inputChangeHandler);
+    });
+
+    getEditor().enable(false);
+}
+
+export { setDefaultContent, updateDefaultContent, newComment, addInput, importWord, compareContent, setFixedInputs };

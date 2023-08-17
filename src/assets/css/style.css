@@ -95,3 +95,29 @@ body {
 .custom-act i:hover {
   color: #0066cc;
 }
+
+.sectionTitle {
+  margin-bottom: 6px;
+}
+
+#inputsArea {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+#inputsArea input, #inputsArea textarea {
+  width: 100%;
+  border: none;
+  background-color: white;
+  outline: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  resize: none;
+  font-size: 14px;
+}
+
+#inputsArea textarea {
+  height: 120px;
+}

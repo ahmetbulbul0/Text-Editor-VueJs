@@ -6,6 +6,8 @@ const emits = defineEmits([
     "compareCurrentAndDefaultContent",
     "newComment",
     "addInput",
+    "compareContent",
+    "setFixedInputs"
 ])
 
 </script>
@@ -65,6 +67,9 @@ const emits = defineEmits([
         </a>
         <a class="custom-act" @click="emits('addInput')">
             <i class="fa-solid fa-keyboard"></i>
+        </a>
+        <a class="custom-act" @click="emits('setFixedInputs')">
+            <i class="fa-brands fa-readme"></i>
         </a>
     </div>
 </template>

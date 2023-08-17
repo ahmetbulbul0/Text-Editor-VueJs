@@ -62,16 +62,19 @@ function checkHeaders() {
 function checkInputIndicies(delta, source) {
     if (source === "user") {
         let indexChange = delta.ops[0]?.retain || 0;
-        let changeType,
-            lengthChange = null;
-        if (delta.ops[1].insert) {
-            changeType = "insert";
-            lengthChange = delta.ops[1].insert.length;
-        } else if (delta.ops[1].delete) {
-            changeType = "delete";
-            lengthChange = delta.ops[1].delete;
+        let changeType, lengthChange;
+
+        if (delta.ops[1]) {
+            if (delta.ops[1].insert) {
+                changeType = "insert";
+                lengthChange = delta.ops[1].insert.length;
+            } else if (delta.ops[1].delete) {
+                changeType = "delete";
+                lengthChange = delta.ops[1].delete;
+            }
+
+            updateInputIndices(indexChange, lengthChange, changeType);
         }
-        updateInputIndices(indexChange, lengthChange, changeType);
     }
 }
 
