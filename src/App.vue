@@ -10,19 +10,29 @@ var editor, editorContentArea, comments;
 
 editorContentArea = ref();
 comments = ref([]);
+const isDarkTheme = ref(true);
 
 onMounted(() => {
   editor = newEditor(editorContentArea, ".editorToolbar")
   setDefaultContent(editor)
+  document.body.classList.add('dark-theme')
 })
 
 const createComment = () => {
   comments = newComment(comments)
 }
+
+const toggleTheme = () => {
+  isDarkTheme.value = !isDarkTheme.value;
+  document.body.classList.toggle('dark-theme');
+}
 </script>
 
 <template>
   <div class="container">
+    <button @click="toggleTheme" class="theme-toggle">
+      <i :class="isDarkTheme ? 'fas fa-sun' : 'fas fa-moon'"></i>
+    </button>
     <section>
       <div class="editorContainer">
         <EditorToolbar @setDefaultContent="setDefaultContent(editor)" @updateDefaultContent="updateDefaultContent" @compareContent="compareContent" @newComment="createComment" @addInput="addInput" />
