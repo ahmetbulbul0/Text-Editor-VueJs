@@ -1,35 +1,43 @@
-![vue_weather_app_1366x768_poster](./git-images/vue_quilljs_text_editor_1920x1080_poster.png)
+# Text-Editor-VueJs
 
+A powerful and lightweight text editor built using Vue.js and Quill.js, designed to deliver a seamless and customizable rich-text editing experience. This project provides an intuitive interface with support for formatting, embedding media, and extending features through custom modules. Perfect for blog platforms, CMS systems, or any application that requires rich text input.
 
-# Vue-QuillJs-Text-Editor
+## Technologies (languages & frameworks)
 
-***Vue QuillJs Text Editor***
+- Html
+- Css
+- JavaScript
+- VueJs
 
-## Technologies
-* **Vue**
-* **Css**
-* **JavaScript**
+## Packages & Libraries
 
-## Dependencies
-* Quill
+- Quill
+- Quill To Word
+- File Saver
+- Mammoth
 
-## Project Setup Process
+## Setup
 
-### install npm (for npm packages)
+1. Install packages
+
 ```sh
 npm install
 ```
-### to run project in development environment
+
+2. Run Project
+
 ```sh
 npm run dev
 ```
 
-### Compile and Minify for Production
+## Essential Terminal Commands
+
+- Type-Check, Compile and Minify for Production
+
 ```sh
 npm run build
 ```
 
-### Lint with
-```sh
-npm run lint
-```
+## Pages
+
+- Home [localhost:5173/](http://localhost:5173/)
